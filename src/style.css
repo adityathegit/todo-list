@@ -1,0 +1,77 @@
+* {
+    box-sizing: border-box
+}
+
+.js-add-todo, .js-cancel-btn, .js-add-btn {
+    padding: 0.8em 1em;
+    font-weight: 600;
+    font-size: clamp(0.7rem, 1vw, 1rem);
+    color: rgb(40, 22, 22);
+    background-color: rgb(246, 248, 104);
+    border: 1px solid rgb(212, 241, 105);
+}
+
+.js-add-todo:hover, .js-cancel-btn:hover, .js-add-btn:hover {
+    cursor: pointer;
+}
+
+.js-todo-body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 10px;
+    padding: 1em;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 550px;
+    box-shadow: 0 0px 9px #dcdcdc;
+}
+
+.js-todo-body input[type="text"],
+.js-todo-body input[type="date"],
+.js-todo-body select,
+.js-todo-body textarea {
+    padding: 0.8em 1em;
+    letter-spacing: 0.5px;
+    border: 1px solid #dcdfe6;
+    outline: none;
+    font-size: clamp(0.7rem, 1vw, 1rem);
+    width: 100%;
+}
+
+.js-todo-body input[type="text"]:focus,
+.js-todo-body input[type="date"]:focus,
+.js-todo-body textarea:focus {
+    border-color: #409eff;
+}
+
+.js-todo-body input[type="text"],
+.js-todo-body textarea {
+    text-transform: uppercase;
+}
+
+.js-date-priority {
+    display: flex;
+    gap: 10px;
+}
+
+.js-date-priority input,
+.js-date-priority select {
+    flex: 1;
+}
+
+.js-date-priority select.priority {
+    color: rgb(40, 22, 22);
+    background-color: #dcdfe6;
+}
+
+.js-todo-body textarea {
+    font-family: inherit;
+    min-height: 8em;
+}
+
+.js-todo-btn {
+    display: flex;
+    justify-content: end;
+    gap: 10px;
+}
+
