@@ -1,5 +1,4 @@
 const STORAGE_KEY = "todoList";
-let isopen = true;
 
 class Todo {
     constructor({ id, title, description, dueDate, priority }) {
@@ -54,6 +53,13 @@ class TodoArray {
         return todo;
     }
 
+    removeTodo(id) {
+        const remainingTodo = this.todos.filter((todo) => todo.id !== id);
+        if (remainingTodo.length === this.todos.length) return;
+        this.todos = remainingTodo;
+        this.persist();
+    }
+
     persist() {
         this.storage.saveTodo(this.todos);
     }
@@ -106,7 +112,6 @@ class TodoFieldView {
     createTodoFieldElement() {
         const todoCard = createElement("div", "js-todo-body");
 
-        // Todo Title
         const todoTitle = createElement("div", "js-title");
         const titleInput = document.createElement("input");
         titleInput.setAttribute("id", "title-input");
@@ -115,7 +120,6 @@ class TodoFieldView {
 
         todoTitle.appendChild(titleInput);
 
-        // Todo Date and Priority
         const todoDatePriority = createElement("div", "js-date-priority");
         const dateInput = document.createElement("input");
         dateInput.setAttribute("id", "date-input");
@@ -138,7 +142,6 @@ class TodoFieldView {
 
         todoDatePriority.append(dateInput, priorityInput);
 
-        // Todo description
         const todoDescription = createElement("div", "js-description");
         const descriptionInput = document.createElement("textarea");
         descriptionInput.setAttribute("id", "description-input");
@@ -146,7 +149,6 @@ class TodoFieldView {
 
         todoDescription.appendChild(descriptionInput);
 
-        // Todo Buttons
         const todoBtn = createElement("div", "js-todo-btn");
         const cancelBtn = createElement("button", "js-cancel-btn", "Cancel");
         const addBtn = createElement("button", "js-add-btn", "Add Todo");
@@ -177,14 +179,15 @@ class TodoListView {
 
     createTodoElement(todo) {
         const contentBlock = createElement("div", "js-content-block");
-        
+        contentBlock.setAttribute("data-id", `${todo.id}`);
+
         const checkboxTitle = createElement("div", "js-checkbox-title");
         const checkbox = document.createElement("input");
-        checkbox.setAttribute("id", "js-done-todo");
+        checkbox.classList.add("js-done-todo");
         checkbox.setAttribute("type", "checkbox");
         const title = createElement("h1", "js-title", `${todo.title}`);
-        
-        checkboxTitle.append(checkbox, title); 
+
+        checkboxTitle.append(checkbox, title);
 
         const descriptionDiv = createElement("div", "description");
         const descriptionPara = createElement("p", "js-description", `${todo.description}`);
@@ -193,9 +196,17 @@ class TodoListView {
         const datePriorityDiv = createElement("div", "js-date-priority");
         const datePara = createElement("p", "js-date", `${todo.dueDate}`);
         const priorityPara = createElement("p", "js-priority", `${todo.priority}`);
-        
+        if (todo.priority === "Low") {
+            priorityPara.style.color = "rgb(151, 147, 16)";
+        }
+        else if (todo.priority === "Medium") {
+            priorityPara.style.color = "rgb(16, 119, 26)";
+        }
+        else {
+            priorityPara.style.color = "rgb(211, 18, 37)";
+        }
 
-        datePriorityDiv.append(datePara, priorityPara);
+        datePriorityDiv.append(priorityPara, datePara);
 
         contentBlock.append(checkboxTitle, descriptionDiv, datePriorityDiv);
 
@@ -215,13 +226,18 @@ class TodoController {
         this.shelfAction = new Map([
             [".js-add-btn", () => this.handleAdd()],
             [".js-cancel-btn", () => this.closeForm()],
+            [".js-done-todo", (event) => {
+                const id = event.target.closest(".js-content-block")?.dataset.id;
+                if (event.target.checked && id) this.todoList.removeTodo(id);
+            }],
         ]);
     }
 
     init() {
-        const { todoButton, todoFields } = this.elements;
+        const { todoButton, todoFields, todoContent } = this.elements;
         todoButton.addEventListener("click", () => this.toggleForm());
         todoFields.addEventListener("click", (event) => this.handleShelfClick(event));
+        todoContent.addEventListener("click", (event) => this.handleShelfClick(event));
         this.refresh();
     }
 
@@ -251,7 +267,7 @@ class TodoController {
     handleShelfClick(event) {
         for (const [selector, action] of this.shelfAction) {
             if (event.target.closest(selector)) {
-                action();
+                action(event);
                 this.refresh();
                 return;
             }
@@ -275,15 +291,11 @@ new TodoController({
     elements: {
         todoButton: document.querySelector(".js-add-todo"),
         todoFields,
+        todoContent
     },
 }).init();
 
-const obj = {
-    title: "Fix bedroom door hinge",
-    description: "The top hinge is squeaktodolistviewing and loose.",
-    dueDate: "Sunday, 27 September 2026",
-    priority: "Medium"
-};
+
 
 
 
