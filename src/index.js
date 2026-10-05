@@ -1,5 +1,7 @@
 const STORAGE_KEY = "todoList";
 
+import "./style.css";
+
 class Todo {
     constructor({ id, title, description, dueDate, priority }) {
         this.id = id;
