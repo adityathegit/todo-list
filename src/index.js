@@ -1,4 +1,5 @@
 const STORAGE_KEY = "todoList";
+let isopen = true;
 
 class Todo {
     constructor({ id, title, description, dueDate, priority }) {
@@ -18,7 +19,8 @@ class TodoListStorage {
 
     loadTodo() {
         try {
-            const parsedTodo = this.storage.getItem(this.key);
+            const raw = this.storage.getItem(this.key);
+            const parsedTodo = raw ? JSON.parse(raw) : null;
             return Array.isArray(parsedTodo) ? parsedTodo : null;
         } catch {
             return null;
@@ -51,9 +53,31 @@ class TodoArray {
         this.persist();
         return todo;
     }
-    
+
     persist() {
         this.storage.saveTodo(this.todos);
+    }
+}
+
+class TodoFormReader {
+    constructor(root = document) {
+        this.root = root;
+    }
+
+    getValues(selector) {
+        const element = this.root.querySelector(selector);
+        return element ? element.value.trim() : "";
+    }
+
+    read() {
+        const title = this.getValues("#title-input");
+        const dueDate = this.getValues("#date-input");
+        const priority = this.getValues("#priority-input");
+        const description = this.getValues("#description-input");
+
+        if (!title || !dueDate || !priority || !description) return null;
+
+        return { title, dueDate, priority, description };
     }
 }
 
@@ -64,7 +88,7 @@ const createElement = (tag, className, text = "") => {
     return element;
 }
 
-class TodoListView {
+class TodoFieldView {
     constructor(container) {
         this.container = container;
     }
@@ -73,6 +97,10 @@ class TodoListView {
         const fragment = document.createDocumentFragment();
         fragment.appendChild(this.createTodoFieldElement());
         this.container.replaceChildren(fragment);
+    }
+
+    clear() {
+        this.container.replaceChildren();
     }
 
     createTodoFieldElement() {
@@ -95,10 +123,10 @@ class TodoListView {
 
         const priorityInput = createElement("select", "priority");
         priorityInput.setAttribute("name", "priority");
-        priorityInput.setAttribute("id", "priority");
-        
+        priorityInput.setAttribute("id", "priority-input");
+
         const optionLow = createElement("option", "options", "LOW");
-        optionLow.setAttribute("value", "Low")   
+        optionLow.setAttribute("value", "Low")
 
         const optionMedium = createElement("option", "options", "MEDIUM");
         optionMedium.setAttribute("value", "Medium")
@@ -115,7 +143,7 @@ class TodoListView {
         const descriptionInput = document.createElement("textarea");
         descriptionInput.setAttribute("id", "description-input");
         descriptionInput.setAttribute("placeholder", "DESCRIPTION");
-        
+
         todoDescription.appendChild(descriptionInput);
 
         // Todo Buttons
@@ -130,24 +158,134 @@ class TodoListView {
     }
 }
 
+class TodoListView {
+    constructor(container) {
+        this.container = container;
+    }
+
+    render(todos) {
+        const fragment = document.createDocumentFragment();
+        todos.forEach((todo) => {
+            fragment.appendChild(this.createTodoElement(todo));
+        })
+        this.container.replaceChildren(fragment);
+    }
+
+    clear() {
+        this.container.replaceChildren();
+    }
+
+    createTodoElement(todo) {
+        const contentBlock = createElement("div", "js-content-block");
+        
+        const checkboxTitle = createElement("div", "js-checkbox-title");
+        const checkbox = document.createElement("input");
+        checkbox.setAttribute("id", "js-done-todo");
+        checkbox.setAttribute("type", "checkbox");
+        const title = createElement("h1", "js-title", `${todo.title}`);
+        
+        checkboxTitle.append(checkbox, title); 
+
+        const descriptionDiv = createElement("div", "description");
+        const descriptionPara = createElement("p", "js-description", `${todo.description}`);
+        descriptionDiv.appendChild(descriptionPara);
+
+        const datePriorityDiv = createElement("div", "js-date-priority");
+        const datePara = createElement("p", "js-date", `${todo.dueDate}`);
+        const priorityPara = createElement("p", "js-priority", `${todo.priority}`);
+        
+
+        datePriorityDiv.append(datePara, priorityPara);
+
+        contentBlock.append(checkboxTitle, descriptionDiv, datePriorityDiv);
+
+        return contentBlock;
+    }
+}
+
+class TodoController {
+    constructor({ todoList, view, fieldView, formReader, elements }) {
+        this.todoList = todoList;
+        this.view = view;
+        this.fieldView = fieldView;
+        this.formReader = formReader;
+        this.elements = elements;
+        this.isOpen = false;
+
+        this.shelfAction = new Map([
+            [".js-add-btn", () => this.handleAdd()],
+            [".js-cancel-btn", () => this.closeForm()],
+        ]);
+    }
+
+    init() {
+        const { todoButton, todoFields } = this.elements;
+        todoButton.addEventListener("click", () => this.toggleForm());
+        todoFields.addEventListener("click", (event) => this.handleShelfClick(event));
+        this.refresh();
+    }
+
+    toggleForm() {
+        this.isOpen ? this.closeForm() : this.openForm();
+    }
+
+    openForm() {
+        this.isOpen = true;
+        this.fieldView.render();
+    }
+
+    closeForm() {
+        this.isOpen = false;
+        this.fieldView.clear();
+    }
+
+    handleAdd() {
+        const data = this.formReader.read();
+        if (!data) return;
+
+        this.todoList.addTodo(data);
+        this.refresh();
+        this.closeForm();
+    }
+
+    handleShelfClick(event) {
+        for (const [selector, action] of this.shelfAction) {
+            if (event.target.closest(selector)) {
+                action();
+                this.refresh();
+                return;
+            }
+        }
+    }
+
+    refresh() {
+        this.view.render(this.todoList.getTodo());
+    }
+}
+
+const todoArray = new TodoArray(new TodoListStorage());
+const todoFields = document.querySelector(".js-todo-fields");
+const todoContent = document.querySelector(".js-todo-content");
+
+new TodoController({
+    todoList: todoArray,
+    view: new TodoListView(todoContent),
+    fieldView: new TodoFieldView(todoFields),
+    formReader: new TodoFormReader(),
+    elements: {
+        todoButton: document.querySelector(".js-add-todo"),
+        todoFields,
+    },
+}).init();
+
 const obj = {
-    title: "Fix bedroom door hinge", 
-    description: "The top hinge is squeaking and loose.", 
-    dueDate: "Sunday, 27 September 2026", 
+    title: "Fix bedroom door hinge",
+    description: "The top hinge is squeaktodolistviewing and loose.",
+    dueDate: "Sunday, 27 September 2026",
     priority: "Medium"
 };
 
-const todoArray = new TodoArray(new TodoListStorage());
 
-console.log(todoArray.addTodo(obj))
 
-const todolistview = new TodoListView(document.querySelector(".js-todo-fields"));
-
-const button = document.querySelector(".js-add-todo");
-button.addEventListener("click", () => {
-    todolistview.render();
-})
-
-console.log(todoArray.getTodo());
 
 

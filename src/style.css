@@ -22,7 +22,7 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    max-width: 550px;
+    max-width: 750px;
     box-shadow: 0 0px 9px #dcdcdc;
 }
 
@@ -74,4 +74,64 @@
     justify-content: end;
     gap: 10px;
 }
+
+.js-todo-content {
+    padding: 0.5em;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.js-content-block {
+    padding: 0.8em 1em;
+    border: 1px solid #dcdcdc;
+    max-width: 750px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+}
+
+.js-checkbox-title {
+    display: flex;
+    gap: 16px;
+}
+
+#js-done-todo {
+    transform: scale(1.25);
+    accent-color: rgb(246, 248, 104);
+    color: rgb(40, 22, 22);
+}
+
+.js-title {
+    font-size: clamp(1.2rem, 1.5vw, 1.8rem);
+    letter-spacing: 0.5px;
+    margin: 0;
+}
+
+.js-description {
+    color: #2b2929;
+    font-size: clamp(0.9rem, 1vw, 1.2rem);
+    margin: 0;
+}
+
+.js-date-priority {
+    display: flex;
+    gap: 10px;
+    font-size: clamp(0.9rem, 1vw, 1.2rem);
+}
+
+.js-date {
+    font-weight: bold;
+}
+
+.js-priority {
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+
+
+
+
 
